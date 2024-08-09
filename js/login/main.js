@@ -44,20 +44,7 @@ export class main extends Phaser.Scene {
             link.rel = 'stylesheet';
             link.href = "../css/login.css"; // Ruta del archivo CSS
             iframeDoc.head.appendChild(link);
-            const style = iframeDoc.createElement('style');
-            style.textContent = `
-                .swal-overlay {
-                    z-index: 99999;
-                }
-                .swal-modal {
-                    z-index: 100000;
-                    font-family: 'Roboto', sans-serif; /* Cambia 'Roboto' por la fuente deseada */
-                }
-                .swal-title, .swal-text {
-                    font-family: 'Roboto', sans-serif; /* Cambia 'Roboto' por la fuente deseada */
-                }
-            `;
-            iframeDoc.head.appendChild(style);
+            
 
             // Añadir el código para manejar el focus y blur en los inputs dentro del iframe
             this.setupFocusBlur(iframeDoc);
