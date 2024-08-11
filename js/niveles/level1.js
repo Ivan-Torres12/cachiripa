@@ -32,7 +32,7 @@ export class Level1 extends Phaser.Scene {
             volumen:0.5,
             loop:true
         })
-        this.nivel.play();
+        nivel.play();
         this.background = this.add.tileSprite(0, 0, 5120, 480, 'background');
         this.background.setOrigin(0, 0);
         this.backgroundScrollSpeed = 0.5;
