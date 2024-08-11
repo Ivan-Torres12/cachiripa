@@ -28,6 +28,9 @@ const config = {
             debug: false
         }
     },
+    audio: {
+        disableWebAudio: false  // Asegúrate de que WebAudio esté habilitado
+    },
 }
 
 let game = new Phaser.Game(config);
