@@ -24,9 +24,15 @@ export class Level1 extends Phaser.Scene {
         this.Enemigos.preload()
         this.carretera.preload()
         this.load.image('transitionZone', '../images/enemigos/liebre-normal.png'); // Imagen para el objeto invisible
+        this.load.audio('nivel', './sound/nivel1.mp3');
     }
 
     create() {
+        const nivel= this.sound.add("nivel",{
+            volumen:0.5,
+            loop:true
+        })
+        this.nivel.play();
         this.background = this.add.tileSprite(0, 0, 5120, 480, 'background');
         this.background.setOrigin(0, 0);
         this.backgroundScrollSpeed = 0.5;
