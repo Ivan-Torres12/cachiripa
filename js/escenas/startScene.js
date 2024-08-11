@@ -11,10 +11,16 @@ export class StartScene extends Phaser.Scene {
         this.load.image('backgroundImage', '../images/ambiente/menu.png');
         this.load.image('playButton', '../images/ambiente/boton_play.png'); // Carga la imagen del botón de play
         this.load.image('logoutButton', '../images/ambiente/logout.png'); // Carga la imagen del botón de logout
-        
+         this.load.audio("fondofinal", "./sound/menu.mp3");
     }
 
     create() {
+        // Cargar el audio del fondo y asignarlo a this.music
+        this.music = this.sound.add("fondofinal", {
+            loop: true,
+            volume: 0.5
+        });
+        this.music.play();
         let background = this.add.image(0, 0, 'backgroundImage').setOrigin(0, 0);
         background.displayWidth = this.sys.game.config.width;
         background.displayHeight = this.sys.game.config.height;
@@ -71,8 +77,13 @@ export class StartScene extends Phaser.Scene {
 }
 
 startGame() {
-   this.scene.start('level1');
-}
+        // Pausar la música antes de cambiar de escena
+        if (this.music) {
+            this.music.pause();
+        }
+        this.scene.start('level1');
+    }
+
 
 logout() {
    const auth = getAuth(); // Asegúrate de haber importado getAuth de Firebase
