@@ -36,7 +36,7 @@ export class StartScene extends Phaser.Scene {
         let playButton = this.add.image(this.sys.game.config.width / 2, 300, 'playButton')
             .setOrigin(0.5)
             .setInteractive()
-            .on('pointerdown', () => this.startGame());
+            .on('pointerdown', () => this.scene.start('InstructionScene'));
 
         // Escalar el botón de play según sea necesario
         playButton.setScale(0.9);
@@ -75,15 +75,6 @@ export class StartScene extends Phaser.Scene {
        logoutButton.setScale(0.9);
    });
 }
-
-startGame() {
-        // Pausar la música antes de cambiar de escena
-        if (this.music) {
-            this.music.pause();
-        }
-        this.scene.start('level1');
-    }
-
 
 logout() {
    const auth = getAuth(); // Asegúrate de haber importado getAuth de Firebase
