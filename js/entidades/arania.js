@@ -177,10 +177,10 @@ export class arania {
 
             this.myScene.time.delayedCall(500, () => {
                 enemy.destroy();
+                this.myScene.sound.play('explosionSound');
                 let explosionScale = Math.min(enemy.displayWidth / 112, enemy.displayHeight / 112);
                 let explosion = this.myScene.add.sprite(enemy.x, enemy.y, 'explosion').setScale(explosionScale);
                 explosion.play('explosion-muerte');
-                this.myScene.sound.play('explosionSound');
                 explosion.on('animationcomplete', () => {
                     explosion.destroy();
                 });
