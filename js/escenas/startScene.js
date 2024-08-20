@@ -36,7 +36,7 @@ export class StartScene extends Phaser.Scene {
         let playButton = this.add.image(this.sys.game.config.width / 2, 300, 'playButton')
             .setOrigin(0.5)
             .setInteractive()
-            .on('pointerdown', () => this.scene.start('InstructionScene'));
+            .on('pointerdown', () => this.startGame());
 
         // Escalar el botón de play según sea necesario
         playButton.setScale(0.9);
@@ -62,36 +62,44 @@ export class StartScene extends Phaser.Scene {
        .setOrigin(0.5)
        .setInteractive()
        .on('pointerdown', () => this.logout());
-
-   // Escalar el botón de logout según sea necesario
-   logoutButton.setScale(0.5);
-
-   // Añadir efecto de cambio de escala al pasar el mouse sobre el botón
-   logoutButton.on('pointerover', () => {
-       logoutButton.setScale(0.7);
-   });
-
-   logoutButton.on('pointerout', () => {
-       logoutButton.setScale(0.9);
-   });
-}
-
-logout() {
-   const auth = getAuth(); // Asegúrate de haber importado getAuth de Firebase
-   auth.signOut().then(() => {
-       const iframe = document.querySelector('iframe');
-           if (iframe) {
-               iframe.style.display = 'block';
-           }
-   
-           // Mostrar el canvas
-           const canvas = document.querySelector('canvas');
-           if (canvas) {
-               canvas.style.display = 'none';
-           }
-    // Redirigir a la escena de login o cualquier otra que quieras
-   }).catch((error) => {
-       console.error('Error al cerrar sesión:', error);
-   });
-}
+    
+       // Escalar el botón de logout según sea necesario
+       logoutButton.setScale(0.5);
+    
+       // Añadir efecto de cambio de escala al pasar el mouse sobre el botón
+       logoutButton.on('pointerover', () => {
+           logoutButton.setScale(0.7);
+       });
+    
+       logoutButton.on('pointerout', () => {
+           logoutButton.setScale(0.9);
+       });
+    }
+    
+    startGame() {
+            // Pausar la música antes de cambiar de escena
+            if (this.music) {
+                this.music.pause();
+            }
+            this.scene.start('InstructionScene');
+        }
+    
+    logout() {
+       const auth = getAuth(); // Asegúrate de haber importado getAuth de Firebase
+       auth.signOut().then(() => {
+           const iframe = document.querySelector('iframe');
+               if (iframe) {
+                   iframe.style.display = 'block';
+               }
+       
+               // Mostrar el canvas
+               const canvas = document.querySelector('canvas');
+               if (canvas) {
+                   canvas.style.display = 'none';
+               }
+        // Redirigir a la escena de login o cualquier otra que quieras
+       }).catch((error) => {
+           console.error('Error al cerrar sesión:', error);
+       });
+    }
 }
