@@ -1,8 +1,8 @@
 export class VerticalVehicleManager {
     constructor(scene) {
         this.scene = scene;
-        this.vehicleSpeedUp = -250; // Velocidad de los vehículos que suben
-        this.vehicleSpeedDown = 250; // Velocidad de los vehículos que bajan
+        this.vehicleSpeedUp = -300; // Velocidad de los vehículos que suben
+        this.vehicleSpeedDown = 300; // Velocidad de los vehículos que bajan
 
         // Configuraciones para vehículos que suben
         this.vehicleConfigsDown = [
@@ -36,16 +36,21 @@ export class VerticalVehicleManager {
 
         // Crear vehículos que suben y bajan
         this.createVehicle(this.vehiclesUp, 600, this.scene.cameras.main.height - 100, this.vehicleSpeedUp, this.vehicleConfigsUp);
-        this.createVehicle(this.vehiclesDown, 300, 130, this.vehicleSpeedDown, this.vehicleConfigsDown);
         this.createVehicle(this.vehiclesUp, 700, this.scene.cameras.main.height + 100, this.vehicleSpeedUp, this.vehicleConfigsUp);
+        this.createVehicle(this.vehiclesUp, 800, this.scene.cameras.main.height + 200, this.vehicleSpeedUp, this.vehicleConfigsUp);
+        this.createVehicle(this.vehiclesDown, 350, 170, this.vehicleSpeedDown, this.vehicleConfigsDown);
+        this.createVehicle(this.vehiclesDown, 250, 130, this.vehicleSpeedDown, this.vehicleConfigsDown);
         this.createVehicle(this.vehiclesDown, 150, 200, this.vehicleSpeedDown, this.vehicleConfigsDown);
 
         // Crear grupo de proyectiles con un máximo de 3
         this.projectiles = this.scene.physics.add.group({
             maxSize: this.maxProjectiles,
-            allowGravity: true,
             collideWorldBounds: true
         });
+
+        this.scene.physics.add.overlap(this.scene.player.Player, this.vehiclesUp, this.handleVehicleCollision, null, this);
+        this.scene.physics.add.overlap(this.scene.player.Player, this.vehiclesDown, this.handleVehicleCollision, null, this);
+
 
         // Iniciar el evento de disparo de proyectiles
         this.scene.time.addEvent({
@@ -54,9 +59,6 @@ export class VerticalVehicleManager {
             callbackScope: this,
             loop: true
         });
-
-        // Configurar colisiones entre proyectiles y el jugador
-        this.scene.physics.add.collider(this.projectiles, this.scene.player.Player, this.handleProjectileCollision, null, this);
     }
 
     createVehicle(group, x, y, speed, configs) {
@@ -88,12 +90,11 @@ export class VerticalVehicleManager {
         this.vehiclesUp.children.iterate(vehicle => {
             if (vehicle.y <= 130) {
                 this.resetVehicle(vehicle, vehicle.initialX, vehicle.initialY, this.vehicleSpeedUp, this.vehicleConfigsUp);
-                
             } else {
                 vehicle.setVelocityY(this.vehicleSpeedUp);
             }
         });
-
+    
         this.vehiclesDown.children.iterate(vehicle => {
             if (vehicle.y >= 1300) {
                 this.resetVehicle(vehicle, vehicle.initialX, 130, this.vehicleSpeedDown, this.vehicleConfigsDown);
@@ -101,11 +102,12 @@ export class VerticalVehicleManager {
                 vehicle.setVelocityY(this.vehicleSpeedDown);
             }
         });
-
+    
         this.projectiles.children.iterate(projectile => {
             if (projectile.active) {
-                    this.scene.time.delayedCall(3000, () => {
+                this.scene.time.delayedCall(4000, () => {
                     projectile.setActive(false).setVisible(false);
+                    this.scene.physics.world.removeCollider(this.projectileCollider);
                 }, [], this);
             }
         });
@@ -130,30 +132,50 @@ export class VerticalVehicleManager {
         vehicle.setVelocityY(speed);
     }
 
+    handleVehicleCollision(player, vehicle) {
+        const damageZoneY = 240;
+        const damageRange = 50;
+    
+        // Verificar si el vehículo está dentro del rango de daño
+        if (vehicle.y >= damageZoneY - damageRange && vehicle.y <= damageZoneY + damageRange) {
+            if (!player.invulnerable) {
+                this.scene.player.takeDamage(2, 'right');
+            }
+        }
+    }
+
     shootProjectile() {
         const player = this.scene.player.Player;
 
         this.vehiclesUp.children.iterate(vehicle => {
-            if (vehicle.y <= player.y + 50 && vehicle.y >= this.scene.Plataformas.layer2.y) {
+            if (vehicle.y <= player.y + 50) {
                 let projectile = this.projectiles.getFirstDead(false);
                 if (!projectile) {
                     if (this.projectiles.getLength() < this.maxProjectiles) {
                         projectile = this.projectiles.create(vehicle.x, vehicle.y, 'projectile');
                         projectile.setScale(0.2);
+                        projectile.setSize(32, 32);
+                        projectile.setOffset(32, 16);
                     }
                 }
                 if (projectile) {
-                    if (this.projectileCollider) {
-                        this.scene.physics.world.removeCollider(this.projectileCollider);
-                    }
                     projectile.setActive(true).setVisible(true);
                     projectile.setPosition(vehicle.x, vehicle.y);
-                    projectile.setVelocityY(-300); // Disparar hacia arriba
+                    projectile.setVelocityY(-200); // Disparar hacia arriba
                     projectile.setVelocityX(Phaser.Math.Between(-50, 50)); // Rango de movimiento en X
-                    projectile.body.setAllowGravity(true);
-    
-                    this.scene.time.delayedCall(1000, () => {
-                        this.projectileCollider = this.scene.physics.add.collider(projectile, this.scene.Plataformas.layer2);
+
+                    this.hitbox = this.scene.physics.add.overlap(player, projectile, () => {
+                        if (!player.invulnerable) {
+                            this.scene.handleEnemyAttack(player, projectile);
+                        }
+                    }, null, this);
+
+                    this.scene.time.delayedCall(3000, () => {
+                        if (this.hitbox) {
+                            this.scene.physics.world.removeCollider(this.hitbox); // Eliminar la colisión después de un tiempo
+                            this.hitbox = null;
+                            this.projectileCollider = this.scene.physics.add.collider(projectile, this.scene.Plataformas.layer2);
+                        }
                     });
                 }
             }
@@ -169,25 +191,26 @@ export class VerticalVehicleManager {
                     }
                 }
                 if (projectile) {
-                    if (this.projectileCollider) {
-                        this.scene.physics.world.removeCollider(this.projectileCollider);
-                    }
                     projectile.setActive(true).setVisible(true);
                     projectile.setPosition(vehicle.x, vehicle.y);
-                    projectile.setVelocityY(-300); // Disparar hacia arriba
-                    projectile.setVelocityX(Phaser.Math.Between(-50, 50)); // Rango de movimiento en X
-                    projectile.body.setAllowGravity(true);
-    
-                    this.scene.time.delayedCall(1000, () => {
-                        this.projectileCollider = this.scene.physics.add.collider(projectile, this.scene.Plataformas.layer2);
+                    projectile.setVelocityY(-200); // Disparar hacia arriba
+                    projectile.setVelocityX(Phaser.Math.Between(-50, 50)); // Rango de movimiento en 
+
+                    this.hitbox = this.scene.physics.add.overlap(player, projectile, () => {
+                        if (!player.invulnerable) {
+                            this.scene.handleEnemyAttack(player, projectile);
+                        }
+                    }, null, this);
+
+                    this.scene.time.delayedCall(3000, () => {
+                        if (this.hitbox) {
+                            this.scene.physics.world.removeCollider(this.hitbox); // Eliminar la colisión después de un tiempo
+                            this.hitbox = null;
+                            this.projectileCollider = this.scene.physics.add.collider(projectile, this.scene.Plataformas.layer2);
+                        }
                     });
                 }
             }
         });
-        
-    }
-
-    handleProjectileCollision(projectile, player) {
-        
     }
 }
