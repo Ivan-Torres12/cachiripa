@@ -5,12 +5,15 @@ export class GameOverScene extends Phaser.Scene {
 
     init(data) {
         this.currentLevel = data.currentLevel; // Almacenar el nombre de la escena del nivel actual
+        this.nivelMusic = data.nivelMusic;
     }
 
     create() {
         this.cameras.main.setBackgroundColor('rgba(0, 0, 0, 1)');
         this.add.text(this.scale.width / 2, this.scale.height / 2, 'Game Over', { fontSize: '64px', fill: '#ff0000' }).setOrigin(0.5);
-
+        if (this.nivelMusic) {
+            this.nivelMusic.stop();
+        }
         let restartButton = this.add.text(this.scale.width / 2, this.scale.height / 2 + 100, 'Restart', { fontSize: '32px', fill: '#ffffff' }).setOrigin(0.5);
         restartButton.setInteractive();
         restartButton.on('pointerdown', () => {
