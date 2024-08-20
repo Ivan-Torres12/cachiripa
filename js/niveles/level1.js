@@ -1,4 +1,3 @@
-
 import { GameData } from "../escenas/index.js";
 import { Player } from "../entidades/player.js";
 import { Plataformas } from "../mapa/platform.js";
@@ -9,11 +8,12 @@ import { carretera } from "../mapa/carreteras.js";
 export class Level1 extends Phaser.Scene {
     constructor() {
         super({ key: "level1" });
+        
         this.player = new Player(this);
         this.Plataformas = new Plataformas(this);
         this.vehicleManager = new VehicleManager(this);
-        this.Enemigos=new arania(this)
-        this.carretera=new carretera(this)
+        this.Enemigos = new arania(this);
+        this.carretera = new carretera(this);
     }
 
     preload() {
@@ -21,8 +21,8 @@ export class Level1 extends Phaser.Scene {
         this.Plataformas.preload();
         this.player.preload();
         this.vehicleManager.preload();
-        this.Enemigos.preload()
-        this.carretera.preload()
+        this.Enemigos.preload();
+        this.carretera.preload();
         this.load.image('transitionZone', '../images/enemigos/liebre-normal.png'); // Imagen para el objeto invisible
         this.load.audio('nivel', './sound/nivel1.mp3');
     }
@@ -33,16 +33,21 @@ export class Level1 extends Phaser.Scene {
             loop:true
         })
         nivel.play();
+        GameData.health = 5;
+        GameData.score = 0;
+        GameData.money = 0;
+
         this.background = this.add.tileSprite(0, 0, 5120, 480, 'background');
         this.background.setOrigin(0, 0);
         this.backgroundScrollSpeed = 0.5;
 
         this.Plataformas.create();
         this.player.create();
-        this.Enemigos.create(this.player.Player)
-        this.carretera.create()
+        this.Enemigos.create(this.player.Player);
+        this.carretera.create();
         this.vehicleManager.create(); 
 
+        // Colisiones y superposiciones
         this.physics.add.collider(this.player.Player, this.Plataformas.layer6);
         this.physics.add.collider(this.player.Player, this.Plataformas.layer5);
         this.physics.add.collider(this.player.Player, this.Plataformas.layer3);
@@ -52,9 +57,10 @@ export class Level1 extends Phaser.Scene {
         this.physics.add.collider(this.Enemigos.enemies, this.Plataformas.layer5);
         this.physics.add.collider(this.Enemigos.enemies, this.Plataformas.layer3);
 
-        this.physics.add.overlap(this.player.attackHitbox, this.enemies, this.hitEnemy, null, this);
+        // Manejar el ataque del jugador a los enemigos
+        this.physics.add.overlap(this.player.attackHitbox, this.Enemigos.enemies, this.hitEnemy, null, this);
 
-        // Colisiones entre el jugador y los enemigos
+        // Manejar el ataque del enemigo al jugador
         this.physics.add.overlap(this.player.Player, this.Enemigos.enemies, this.handleEnemyAttack, null, this);
 
         // Crear zona de transición invisible
@@ -76,17 +82,14 @@ export class Level1 extends Phaser.Scene {
         // Input para el menú de pausa
         this.input.keyboard.on('keydown-P', () => {
             this.scene.pause();
-            this.scene.launch('PauseScene');
+            this.scene.launch('PauseScene', { currentLevel: this.scene.key });
         });
-
-
     }
 
     update(time, delta) {
         this.background.tilePositionX = this.cameras.main.scrollX * this.backgroundScrollSpeed;
         this.player.update();
         this.vehicleManager.update(); 
-        
         this.Enemigos.data(this.player.Player, this.Enemigos.enemies);
 
         if (this.player.Player) {
@@ -112,45 +115,22 @@ export class Level1 extends Phaser.Scene {
 
     collectCoin(player, coin) {
         coin.disableBody(true, true);
-        this.player.increaseMoney(1)
-        this.player.increaseScore(100)
-        // Lógica para sumar dinero al jugador
+        this.player.increaseMoney(1);
+        this.player.increaseScore(10);
     }
 
     hitEnemy(attackHitbox, enemy) {
-        const direction = this.player.flipX ? 'left' : 'right';
-        this.Enemigos.enemy=enemy
-        this.player.attackHitbox=attackHitbox
-        this.Enemigos.takeDamage( 20, direction);
-        console.log(this.Enemigos.health)
+        this.Enemigos.takeDamage(enemy, 1, attackHitbox.x < enemy.x ? 'left' : 'right'); // Ahora se pasa el enemigo a la función de daño
     }
 
     handleEnemyAttack(player, enemy) {
-        // Calcular la dirección desde donde viene el ataque
-        this.player.takeDamage(20, player.x < enemy.x ? 'left' : 'right')
-        console.log(this.player.health)
-        
+        this.player.takeDamage(1, player.x < enemy.x ? 'left' : 'right');
     }
 
     checkTransition(player, transitionZone) {
         if (this.player.money >= 6) {
             this.scene.stop('level1');
             this.scene.launch('levelCarretera');
-        } else {
-            // Mostrar un mensaje indicando que necesita más monedas
-            const warningText = this.add.text(
-                this.player.x,
-                this.player.y - 50,
-                'Necesitas al menos 6 monedas!',
-                { fontSize: '20px', fill: '#ff0000' }
-            );
-            warningText.setOrigin(0.5, 0.5);
-            warningText.setScrollFactor(0); // Para que el texto se mueva con la cámara
-    
-            // Hacer que el texto desaparezca después de 3 segundos
-            this.time.delayedCall(3000, () => {
-                warningText.destroy();
-            });
         }
-    }
+    }  
 }
