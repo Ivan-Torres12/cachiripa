@@ -82,7 +82,6 @@ export class Level1 extends Phaser.Scene {
         // Input para el menú de pausa
         this.input.keyboard.on('keydown-P', () => {
             this.scene.pause();
-            this.nivel.pause(); // Pausar la música
             this.scene.launch('PauseScene', { currentLevel: this.scene.key });
         });
     }
