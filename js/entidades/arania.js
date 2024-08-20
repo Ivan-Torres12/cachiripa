@@ -9,6 +9,7 @@ export class arania {
         this.myScene.load.spritesheet('spider', '../../images/enemigos/SpiderCone.png', { frameWidth: 128, frameHeight: 128 });
         this.myScene.load.spritesheet('explosion', '../../images/enemigos/explosion.png', { frameWidth: 112, frameHeight: 112 });
         this.myScene.load.tilemapTiledJSON('enemyJSON', '../../json/Level1.json'); 
+        this.myScene.load.audio('explosionSound', './sound/enemigosdead.mp3');
     }
 
     create(pPlayer) {
@@ -179,6 +180,7 @@ export class arania {
                 let explosionScale = Math.min(enemy.displayWidth / 112, enemy.displayHeight / 112);
                 let explosion = this.myScene.add.sprite(enemy.x, enemy.y, 'explosion').setScale(explosionScale);
                 explosion.play('explosion-muerte');
+                this.myScene.sound.play('explosionSound');
                 explosion.on('animationcomplete', () => {
                     explosion.destroy();
                 });
