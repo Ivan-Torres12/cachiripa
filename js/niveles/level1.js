@@ -115,6 +115,7 @@ export class Level1 extends Phaser.Scene {
 
     collectCoin(player, coin) {
         coin.disableBody(true, true);
+        nivel.pause();
         this.player.increaseMoney(1);
         this.player.increaseScore(10);
     }
