@@ -2,7 +2,7 @@ export class BossTruck {
     constructor(scene) {
         this.scene = scene;
         this.truck = null;
-        this.health = 15; 
+        this.health = 10; 
         this.speed = 200; // Velocidad inicial
         this.projectiles = null; // Grupo de proyectiles
         this.shootTimer = null; // Temporizador para disparar proyectiles
@@ -45,9 +45,6 @@ export class BossTruck {
             collideWorldBounds: true
         });
 
-        // Configurar colisiones entre proyectiles y el jugador
-        this.scene.physics.add.collider(this.projectiles, this.scene.player.Player, this.handleProjectileCollision, null, this);
-
         // Iniciar el temporizador para disparar proyectiles cada 1.5 segundos
         this.shootTimer = this.scene.time.addEvent({
             delay: 1500,
@@ -55,6 +52,8 @@ export class BossTruck {
             callbackScope: this,
             loop: true
         });
+
+        this.scene.physics.add.overlap(this.scene.player.Player, this.truck, this.handleVehicleCollision, null, this);
     }
 
     turnAround() {
@@ -124,6 +123,8 @@ export class BossTruck {
     }
 
     shootProjectile() {
+        const player = this.scene.player.Player;
+
         if (!this.isSlowCharging) {
             return;
         }
@@ -143,8 +144,27 @@ export class BossTruck {
         if (projectile) {
             projectile.setActive(true).setVisible(true);
             projectile.setPosition(this.truck.x, this.truck.y);
-            projectile.setVelocityY(-350); // Disparar hacia arriba
-            projectile.setVelocityX(Phaser.Math.Between(-80, 80)); // Rango de movimiento en X
+            projectile.setVelocityY(-400); // Disparar hacia arriba
+            projectile.setVelocityX(Phaser.Math.Between(-50, 50)); // Rango de movimiento en X
+
+            this.hitbox = this.scene.physics.add.overlap(player, projectile, () => {
+                if (!player.invulnerable) {
+                    this.scene.player.takeDamage(1, player.x < projectile ? 'left' : 'right');
+                }
+            }, null, this);
+
+            this.scene.time.delayedCall(3000, () => {
+                if (this.hitbox) {
+                    this.scene.physics.world.removeCollider(this.hitbox); // Eliminar la colisión después de un tiempo
+                    this.hitbox = null;
+                }
+            });
+        }
+    }
+
+    handleVehicleCollision(player, truck) {
+        if (!player.invulnerable) {
+            this.scene.player.takeDamage(1, player.x < truck.x ? 'left' : 'right');
         }
     }
 
@@ -169,7 +189,18 @@ export class BossTruck {
         this.blink();
 
         if (this.health <= 0) {
-            this.destroy(); // Método para destruir el camión o desactivarlo
+            this.truck.setVelocityX(0);
+            this.truck.setVelocityY(0);
+
+            this.scene.time.delayedCall(2500, () => {
+                let explosionScale = Math.min(this.truck.displayWidth / 112, this.truck.displayHeight / 112);
+                let explosion = this.scene.add.sprite(this.truck.x, this.truck.y, 'explosion').setScale(explosionScale);
+                explosion.play('explosion-muerte');
+                explosion.on('animationcomplete', () => {
+                    explosion.destroy();
+                    this.truck.destroy();
+                });
+            });
         }
     }
 
@@ -188,10 +219,5 @@ export class BossTruck {
                 this.isBlinking = false;
             }
         });
-    }
-
-    destroy() {
-        this.truck.setActive(false).setVisible(false); // Desactiva el camión
-        this.projectiles.clear(true, true); // Limpia los proyectiles
     }
 }
