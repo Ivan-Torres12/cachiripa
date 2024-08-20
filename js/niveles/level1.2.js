@@ -30,7 +30,7 @@ export class LevelCarretera extends Phaser.Scene {
         this.physics.add.collider(this.player.Player, this.Plataformas.layer2);
         this.physics.world.setBounds(0, 0, 960, 320);
 
-        this.transitionZone = this.physics.add.sprite(950, 250, 'transitionZone').setScale(0.3);
+        this.transitionZone = this.physics.add.sprite(1050, 250, 'transitionZone').setScale(0.3);
         this.transitionZone.setVisible(false); // Hacer el objeto invisible
         this.transitionZone.body.setAllowGravity(false); // No aplicar gravedad
         this.transitionZone.body.setImmovable(true); 
@@ -46,8 +46,12 @@ export class LevelCarretera extends Phaser.Scene {
         // Input para el menú de pausa
         this.input.keyboard.on('keydown-P', () => {
             this.scene.pause();
-            this.scene.launch('PauseScene');
+            this.scene.launch('PauseScene', { currentLevel: this.scene.key });
         });
+    }
+
+    handleEnemyAttack(player, enemy) {
+        this.player.takeDamage(1, player.x < enemy.x ? 'left' : 'right');
     }
 
     update(time, delta) {
