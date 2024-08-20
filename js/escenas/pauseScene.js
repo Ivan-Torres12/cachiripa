@@ -7,10 +7,6 @@ export class PauseScene extends Phaser.Scene {
     }
 
     create() {
-        const nivel= this.sound.add("nivel",{
-            volumen:0.5,
-            loop:true
-        })
         // Fondo semi-transparente
         this.cameras.main.setBackgroundColor('rgba(0, 0, 0, 0.5)');
 
@@ -35,6 +31,7 @@ export class PauseScene extends Phaser.Scene {
         resumeButton.setInteractive({ useHandCursor: true });
         resumeButton.on('pointerdown', () => {
             this.scene.resume(this.currentLevel); // Reanudar la escena del nivel actual
+            this.scene.get(data.currentLevel).resumeLevel();
             this.scene.stop(); // Detener la escena de pausa
         });
 
