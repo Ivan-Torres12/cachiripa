@@ -14,6 +14,7 @@ export class Level1 extends Phaser.Scene {
         this.vehicleManager = new VehicleManager(this);
         this.Enemigos = new arania(this);
         this.carretera = new carretera(this);
+        this.nivel = null; // Inicializamos la variable de música
     }
 
     preload() {
@@ -82,7 +83,7 @@ export class Level1 extends Phaser.Scene {
         // Input para el menú de pausa
         this.input.keyboard.on('keydown-P', () => {
             this.scene.pause();
-            nivel.stop();
+            this.nivel.pause(); // Pausar la música
             this.scene.launch('PauseScene', { currentLevel: this.scene.key });
         });
     }
