@@ -14,7 +14,6 @@ export class Level1 extends Phaser.Scene {
         this.vehicleManager = new VehicleManager(this);
         this.Enemigos = new arania(this);
         this.carretera = new carretera(this);
-        this.nivel = null; // Inicializamos la variable de música en null
     }
 
     preload() {
