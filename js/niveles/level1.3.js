@@ -41,19 +41,41 @@ export class LevelUnipoli extends Phaser.Scene {
         // Input para el menú de pausa
         this.input.keyboard.on('keydown-P', () => {
             this.scene.pause();
-            this.scene.launch('PauseScene');
+            this.scene.launch('PauseScene', { currentLevel: this.scene.key });
         });
+
+        this.physics.add.overlap(this.player.attackHitbox, this.BossTruck.truck, this.hitEnemy, null, this);
     }
 
     update(time, delta) {
         this.background.tilePositionX = this.cameras.main.scrollX * this.backgroundScrollSpeed;
         this.player.update();
         this.BossTruck.update(); // Actualizar el jefe camión
+
+        // Verificar si el jefe ha sido derrotado
+        if (this.BossTruck.health <= 0 && !this.bossDefeated) {
+            this.bossDefeated = true; // Marcar al jefe como derrotado
+
+            // Mostrar mensaje de victoria
+            const victoryText = this.add.text(
+                this.cameras.main.width / 3,
+                this.cameras.main.height / 3,
+                '¡Victoria!',
+                { fontSize: '48px', fill: '#ffffff' }
+            );
+            victoryText.setOrigin(0.5, 0.5);
+        }
     }
 
     collectCoin(player, coin) {
         coin.disableBody(true, true);
     }
 
-}
+    handleEnemyAttack(player, enemy) {
+        this.player.takeDamage(1, player.x < enemy.x ? 'right' : 'left');
+    }
 
+    hitEnemy(attackHitbox, BossTruck) {
+        this.BossTruck.takeDamage(1);
+    }
+}
