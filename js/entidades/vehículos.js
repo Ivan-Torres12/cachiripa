@@ -72,9 +72,6 @@ export class VehicleManager {
             callbackScope: this,
             loop: true
         });
-    
-        // Configurar colisiones entre proyectiles y el jugador
-        this.scene.physics.add.collider(this.projectiles, this.scene.player.Player, this.handleProjectileCollision, null, this);
     }
 
     createVehicle(group, x, yPosition) {
@@ -120,12 +117,15 @@ export class VehicleManager {
                 vehicle.setVelocityX(this.vehicleSpeed);
             }
         });
-    
+
         this.projectiles.children.iterate(projectile => {
-            this.scene.time.delayedCall(3500, () => {
-                projectile.setActive(false).setVisible(false);
-            });
-        });
+            if (projectile.active) {
+                    this.scene.time.delayedCall(2000, () => {
+                    projectile.setActive(false).setVisible(false);
+                    this.scene.physics.world.removeCollider(this.projectileCollider);
+                }, [], this);
+            }
+        }); 
     }
 
     resetVehicle(vehicle, player, yPosition) {
@@ -161,27 +161,35 @@ export class VehicleManager {
                     if (this.projectiles.getLength() < this.maxProjectiles) {
                         projectile = this.projectiles.create(vehicle.x, vehicle.y, 'projectile');
                         projectile.setScale(0.2)
+                        projectile.setSize(32, 32);
+                        projectile.setOffset(32, 16);
                     }
                 }
                 if (projectile) {
-                    if (this.projectileCollider) {
-                        this.scene.physics.world.removeCollider(this.projectileCollider);
-                    }
                     projectile.setActive(true).setVisible(true);
                     projectile.setPosition(vehicle.x, vehicle.y);
-                    projectile.setVelocityY(-300); // Disparar hacia arriba
-                    projectile.setVelocityX(Phaser.Math.Between(-50, 50)); // Rango de movimiento en X
-                    projectile.body.setAllowGravity(true);
-    
-                    this.scene.time.delayedCall(1000, () => {
-                        this.projectileCollider = this.scene.physics.add.collider(projectile, this.scene.Plataformas.layer5);
+                    projectile.setVelocityY(-300);
+                    projectile.setVelocityX(Phaser.Math.Between(-50, 50));
+
+                    if (this.hitbox) {
+                        this.scene.physics.world.removeCollider(this.hitbox); // Eliminar collider anterior si existe
+                    }
+
+                    this.hitbox = this.scene.physics.add.overlap(player, projectile, () => {
+                        if (!player.invulnerable) {
+                            this.scene.handleEnemyAttack(player, projectile);
+                        }
+                    }, null, this);
+
+                    this.scene.time.delayedCall(1500, () => {
+                        if (this.hitbox) {
+                            this.scene.physics.world.removeCollider(this.hitbox); // Eliminar la colisión después de un tiempo
+                            this.hitbox = null;
+                            this.projectileCollider = this.scene.physics.add.collider(projectile, this.scene.Plataformas.layer5);
+                        }
                     });
                 }
             }
         });
-    }
-    
-    handleProjectileCollision(projectile, player) {
-
     }
 }
