@@ -2,9 +2,6 @@ export class PauseScene extends Phaser.Scene {
     constructor() {
         super({ key: 'PauseScene' });
     }
-    preload() {
-        this.load.audio('nivel', './sound/nivel1.mp3');
-    }
     init(data) {
         this.currentLevel = data.currentLevel; // Almacenar el nombre de la escena del nivel actual
     }
@@ -37,7 +34,6 @@ export class PauseScene extends Phaser.Scene {
         let resumeButton = this.add.text(this.scale.width / 2 + 200, this.scale.height / 2 - 50, 'Resume', { fontSize: '32px', fill: '#ffffff' }).setOrigin(0.5);
         resumeButton.setInteractive({ useHandCursor: true });
         resumeButton.on('pointerdown', () => {
-            nivel.play();
             this.scene.resume(this.currentLevel); // Reanudar la escena del nivel actual
             this.scene.stop(); // Detener la escena de pausa
         });
