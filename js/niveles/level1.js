@@ -82,6 +82,7 @@ export class Level1 extends Phaser.Scene {
         // Input para el menú de pausa
         this.input.keyboard.on('keydown-P', () => {
             this.scene.pause();
+            nivel.pause();
             this.scene.launch('PauseScene', { currentLevel: this.scene.key });
         });
     }
@@ -115,7 +116,6 @@ export class Level1 extends Phaser.Scene {
 
     collectCoin(player, coin) {
         coin.disableBody(true, true);
-        nivel.pause();
         this.player.increaseMoney(1);
         this.player.increaseScore(10);
     }
