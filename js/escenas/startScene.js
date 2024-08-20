@@ -81,7 +81,7 @@ startGame() {
         if (this.music) {
             this.music.pause();
         }
-        this.scene.start('level1');
+        this.scene.start('InstructionScene');
     }
 
 
