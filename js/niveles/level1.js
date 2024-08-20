@@ -14,7 +14,7 @@ export class Level1 extends Phaser.Scene {
         this.vehicleManager = new VehicleManager(this);
         this.Enemigos = new arania(this);
         this.carretera = new carretera(this);
-        this.nivel = null; // Inicializamos la variable de música
+        this.nivel = null; // Inicializamos la variable de música en null
     }
 
     preload() {
@@ -29,11 +29,11 @@ export class Level1 extends Phaser.Scene {
     }
 
     create() {
-        const nivel= this.sound.add("nivel",{
-            volumen:0.5,
-            loop:true
-        })
-        nivel.play();
+        this.nivel = this.sound.add("nivel", {
+            volume: 0.5,
+            loop: true
+        });
+        this.nivel.play();
         GameData.health = 5;
         GameData.score = 0;
         GameData.money = 0;
