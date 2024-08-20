@@ -3,14 +3,12 @@ import { GameData } from '../escenas/index.js'
 export class Player {
     constructor(scene) {
         this.myScene = scene;
-        this.health = 100;  // Vida del jugador
+        this.health = 0;
+        this.score = 0;
+        this.money = 0;
         this.isAttacking = false;
-        this.score = GameData.score;
-        this.money = GameData.money;
         this.isInvincible = false;
     }
-
-
 
     preload() {
         // Cargar spritesheets
@@ -21,8 +19,10 @@ export class Player {
     }
 
     create() {
-        
-        this.createHUD();
+        this.health = GameData.health;
+        this.score = GameData.score;
+        this.money = GameData.money;
+        this.isInvincible = false;
 
         this.myScene.anims.create({
             key: 'headAnimation',
@@ -31,6 +31,7 @@ export class Player {
             repeat: -1
         });
 
+        this.createHUD();
 
         // Player Ataques
         this.myScene.anims.create({
@@ -40,7 +41,7 @@ export class Player {
         });
 
         this.myScene.anims.create({
-            key: 'cachi-morido',
+            key: 'cachi-muerte',
             frames: [{ key: 'ataque', frame: 1 }],
             repeat: 0
         });
@@ -131,8 +132,6 @@ export class Player {
             repeat: -1
         });
 
-
-
         this.myScene.anims.create({
             key: 'cachi-correr',
             frames: this.myScene.anims.generateFrameNumbers('movimientos', { start: 6, end: 12 }),
@@ -146,12 +145,8 @@ export class Player {
             frameRate: 10,
             repeat: -1
         });
-        
-
-        
-
-       
-        this.Player = this.myScene.physics.add.sprite(50, 50, 'movimientos');
+               
+        this.Player = this.myScene.physics.add.sprite(50, 150, 'movimientos');
         
         this.Player.setScale(0.5);
         this.Player.body.setSize(this.Player.width * 0.4, this.Player.height * 0.6);
@@ -168,18 +163,20 @@ export class Player {
 
         // Crear hitbox de ataque (invisible por defecto)
         
-        this.attackHitbox = this.myScene.add.zone(this.Player.x, this.Player.y, 50, 50).setSize(40, 20);;
+        this.attackHitbox = this.myScene.add.zone(this.Player.x, this.Player.y, 50, 50).setSize(40, 20);
         this.myScene.physics.world.enable(this.attackHitbox);
         this.attackHitbox.body.setAllowGravity(false);
         this.attackHitbox.body.setImmovable(true);
         this.attackHitbox.setVisible(false); // Ocultar hitbox
 
+        // Hacer que el hitbox interactúe con los enemigos
+        this.myScene.physics.add.overlap(this.attackHitbox, this.myScene.aranias, this.hitEnemy, null, this);
     }
 
     createHUD() {
         // Crear cabecitas animadas para la vida
         this.heads = [];
-        for (let i = 0; i < 3; i++) { // Suponiendo que tienes 3 cabecitas
+        for (let i = 0; i < GameData.health + 1; i++) { // Suponiendo que tienes 3 cabecitas
             const head = this.myScene.add.sprite(0, 0, 'headSprites');
             head.setScale(0.5); // Tamaño más pequeño
             head.setOrigin(0, 0);
@@ -210,16 +207,15 @@ export class Player {
         }
 
         // Actualizar texto de dinero y puntuación
-        this.moneyText.setText(`Money: ${GameData.money}`);
-        this.scoreText.setText(`Score: ${GameData.score}`);
+        this.moneyText.setText(`Money: ${this.money}`);
+        this.scoreText.setText(`Score: ${this.score}`);
         this.moneyText.setPosition(player.x - 200, player.y - 120);
         this.scoreText.setPosition(player.x + 150, player.y - 120);
-
-        
     }
 
     update() {
         this.updateHUD()
+        if (this.isInvincible) return;
         
         if (this.isAttacking) {
             this.attackHitbox.setPosition(
@@ -261,8 +257,6 @@ export class Player {
             this.deactivateHitbox();
         }
 
-
-
         // Actualizar posición de la hitbox de ataque
         if (this.isAttacking) {
             this.attackHitbox.setPosition(
@@ -270,7 +264,6 @@ export class Player {
                 this.Player.y
             );
         }
-        
     }
 
     activateHitbox() {
@@ -285,48 +278,56 @@ export class Player {
         this.attackHitbox.body.enable = false;
     }
 
-    attack() {
-        // Iniciar la animación de ataque
-        this.isAttacking = true;
-        this.Player.play('attack', true);
-    
-        // Activar la hitbox de ataque
-        this.attackHitbox.body.setEnable(true);
-        // Al finalizar la animación, desactiva la hitbox y detiene la animación de ataque
-        this.Player.on('animationcomplete', () => {
-            this.isAttacking = false;
-            this.attackHitbox.body.setEnable(false);
-        }, this);
+    hitEnemy(attackHitbox, enemy) {
+        enemy.takeDamage(1);  // Llamar al método para que la araña reciba daño
     }
-    
 
     takeDamage(amount, direction) {
         if (this.isInvincible) return;
 
         this.health -= amount;
+        GameData.health = this.health;
         if (this.health <= 0) {
-            this.myScene.scene.start('GameOverScene');
-            return;
+            this.Player.play('cachi-muerte', true)
+            this.Player.body.setOffset(this.Player.width * 0.3, this.Player.height * 0.1)
+            this.Player.setVelocityY(-200);
+            this.Player.setVelocityX(direction === 'left' ? 15 : -15);
+            this.myScene.tweens.add({
+                targets: this.Player,
+                alpha: 0,
+                duration: 100,
+                ease: 'Linear',
+                yoyo: true,
+                repeat: 5,
+                onComplete: () => {
+                    this.Player.setAlpha(1);
+                }
+            });
+            this.myScene.time.delayedCall(4000, () => { 
+                this.myScene.scene.start('GameOverScene', { currentLevel: this.myScene.scene.key });
+                return;
+            })
+            
+        } else { 
+            this.Player.play('cachi-danio', true);
+
+            this.myScene.tweens.add({
+                targets: this.Player,
+                alpha: 0,
+                duration: 100,
+                ease: 'Linear',
+                yoyo: true,
+                repeat: 5,
+                onComplete: () => {
+                    this.isInvincible = false;
+                    this.Player.setAlpha(1);
+                }
+            });
+            this.Player.setVelocityY(-200);
+            this.Player.setVelocityX(direction === 'left' ? 200 : -200);
         }
 
         this.isInvincible = true;
-        this.Player.setVelocityY(direction === 'left' ? 200 : -200);
-        this.Player.setVelocityX(direction === 'left' ? 200 : -200);
-        this.Player.play('cachi-danio', true);
-
-        // Parpadear el sprite
-        this.myScene.tweens.add({
-            targets: this.Player,
-            alpha: 0,
-            duration: 100,
-            ease: 'Linear',
-            yoyo: true,
-            repeat: 5,
-            onComplete: () => {
-                this.isInvincible = false;
-                this.Player.setAlpha(1);
-            }
-        });
     }
 
     increaseScore(amount) {
@@ -339,10 +340,3 @@ export class Player {
         GameData.money = this.money;
     }
 }
-
-        
-
-        
-
-        
-        
