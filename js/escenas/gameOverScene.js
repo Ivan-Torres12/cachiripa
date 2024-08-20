@@ -1,8 +1,10 @@
 export class GameOverScene extends Phaser.Scene {
     constructor() {
-        super({
-            key: 'GameOverScene'
-        });
+        super({ key: 'GameOverScene' });
+    }
+
+    init(data) {
+        this.currentLevel = data.currentLevel; // Almacenar el nombre de la escena del nivel actual
     }
 
     create() {
@@ -12,16 +14,15 @@ export class GameOverScene extends Phaser.Scene {
         let restartButton = this.add.text(this.scale.width / 2, this.scale.height / 2 + 100, 'Restart', { fontSize: '32px', fill: '#ffffff' }).setOrigin(0.5);
         restartButton.setInteractive();
         restartButton.on('pointerdown', () => {
-            this.scene.stop('level1');
-            this.scene.stop('levelCarretera');
-            this.scene.stop('levelUnipoli');
+            this.scene.stop(this.currentLevel); // Detener la escena del nivel actual
             this.scene.stop('GameOverScene');
-            this.scene.start('level1')
+            this.scene.launch('level1'); // Reiniciar la escena del nivel actual
         });
 
         let menuButton = this.add.text(this.scale.width / 2, this.scale.height / 2 + 150, 'Main Menu', { fontSize: '32px', fill: '#ffffff' }).setOrigin(0.5);
         menuButton.setInteractive();
         menuButton.on('pointerdown', () => {
+            this.scene.stop(this.currentLevel); // Asegúrate de detener la escena del nivel actual también
             this.scene.stop('GameOverScene');
             this.scene.start('StartScene');
         });
