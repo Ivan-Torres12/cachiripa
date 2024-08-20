@@ -31,7 +31,6 @@ export class PauseScene extends Phaser.Scene {
         resumeButton.setInteractive({ useHandCursor: true });
         resumeButton.on('pointerdown', () => {
             this.scene.resume(this.currentLevel); // Reanudar la escena del nivel actual
-            this.scene.resume(this.currentLevel).resumeLevel();
             this.scene.stop(); // Detener la escena de pausa
         });
 
